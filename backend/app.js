@@ -1,3 +1,9 @@
+const MONGODB_USERNAME = 'njs101x';
+const MONGODB_PASSWORD = 'njs101x';
+const DATABASE = 'messageNode';
+
+const MONGODB_URI = `mongodb+srv://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@cluster0.tf0txmk.mongodb.net/${DATABASE}`;
+
 const path = require('path');
 
 const express = require('express');
@@ -61,10 +67,12 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(
-    'mongodb+srv://maximilian:9u4biljMQc4jjqbe@cluster0-ntrwp.mongodb.net/messages?retryWrites=true'
+    MONGODB_URI
   )
   .then((result) => {
-    const server = app.listen(8080);
+    const server = app.listen(8080, () => {
+      console.log('Server is running with port 8080')
+    });
     const io = require('socket.io')(server);
     io.on('connection', (socket) => {
       console.log('Client connected');

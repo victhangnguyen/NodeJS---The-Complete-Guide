@@ -40,7 +40,10 @@ class Feed extends Component {
       .catch(this.catchError);
 
     this.loadPosts();
+
     openSocket('http://localhost:8080');
+    //! Please NOTE: you use http here because WebSockets build up on that
+    //! and now this function (openSocket) which is provided by socket.io will do all the heavy lifting behind the scenes
   }
 
   addPost = post => {
