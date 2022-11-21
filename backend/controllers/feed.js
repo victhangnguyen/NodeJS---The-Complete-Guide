@@ -3,6 +3,8 @@ const path = require('path');
 
 const { validationResult } = require('express-validator/check');
 
+const io = require('../socket');
+
 const Post = require('../models/post');
 const User = require('../models/user');
 
@@ -18,7 +20,7 @@ exports.getPosts = async (req, res, next) => {
     res.status(200).json({
       message: 'Fetched posts successfully.',
       posts: posts,
-      totalItems: totalItems
+      totalItems: totalItems,
     });
   } catch (err) {
     if (!err.statusCode) {
@@ -47,17 +49,22 @@ exports.createPost = async (req, res, next) => {
     title: title,
     content: content,
     imageUrl: imageUrl,
-    creator: req.userId
+    creator: req.userId,
   });
   try {
     await post.save();
     const user = await User.findById(req.userId);
     user.posts.push(post);
     await user.save();
+
+    io.getIO().emit('posts', { action: 'create', post: post });
+    //! emit will now send a message to all connected user,k
+    //! broadcast sends it to all users except for the one from which this request was sent.
+
     res.status(201).json({
       message: 'Post created successfully!',
       post: post,
-      creator: { _id: user._id, name: user.name }
+      creator: { _id: user._id, name: user.name },
     });
   } catch (err) {
     if (!err.statusCode) {
@@ -154,8 +161,7 @@ exports.deletePost = async (req, res, next) => {
     const user = await User.findById(req.userId);
     user.posts.pull(postId);
     await user.save();
-
-    res.status(200).json({ message: 'Deleted post.' });
+    user.res.status(200).json({ message: 'Deleted post.' });
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -164,7 +170,7 @@ exports.deletePost = async (req, res, next) => {
   }
 };
 
-const clearImage = filePath => {
+const clearImage = (filePath) => {
   filePath = path.join(__dirname, '..', filePath);
-  fs.unlink(filePath, err => console.log(err));
+  fs.unlink(filePath, (err) => console.log(err));
 };

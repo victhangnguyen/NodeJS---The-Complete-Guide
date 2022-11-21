@@ -18,10 +18,11 @@ const app = express();
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'images');
+    cb(null, 'backend/images');
   },
   filename: (req, file, cb) => {
-    cb(null, new Date().toISOString() + '-' + file.originalname);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, 'image-' + uniqueSuffix);
   },
 });
 
@@ -66,14 +67,12 @@ app.use((error, req, res, next) => {
 });
 
 mongoose
-  .connect(
-    MONGODB_URI
-  )
+  .connect(MONGODB_URI)
   .then((result) => {
     const server = app.listen(8080, () => {
-      console.log('Server is running with port 8080')
+      console.log('Server is running with port 8080');
     });
-    const io = require('socket.io')(server);
+    const io = require('./socket').init(server);
     io.on('connection', (socket) => {
       console.log('Client connected');
     });
